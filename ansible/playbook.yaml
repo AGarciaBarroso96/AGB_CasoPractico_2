@@ -1,0 +1,46 @@
+- name: Instalar Podman
+  hosts: webserver
+  become: yes
+  tasks:
+    - name: Instalar paquetes necesarios
+      apt:
+        name: ['podman', 'apache2']
+        state: present
+    # - name: Iniciar Podman
+      # systemd:
+        # name: podman
+        # state: started
+        # enabled: yes
+    
+    
+    # - name: Make sure a service unit is running
+      # ansible.builtin.systemd:
+        # state: started
+        # name: httpd   
+    # - name: Add a user to a password file and ensure permissions are set
+      # community.general.htpasswd:
+        # path: /webserver/passwdfile
+        # name: admin
+        # password: 'admin1234'
+        # owner: root
+        # group: www-data
+        # mode: 0640
+        
+    - name: Generate a Self Signed OpenSSL certificate
+      community.crypto.x509_certificate:
+        path: /home/azureuser/webserver/certificado.crt
+        privatekey_path: /etc/ssl/certs/certificado.pem
+        csr_path: /home/azureuser/webserver/certificado.csr
+        provider: selfsigned
+    - name: Generate a Let's Encrypt Certificate
+      community.crypto.x509_certificate:
+        path: /home/azureuser/webserver/certificado.crt
+        csr_path: /home/azureuser/webserver/certificado.csr
+        provider: acme
+        acme_accountkey_path: /etc/ssl/private/certificado.pem
+        acme_challenge_path: /etc/ssl/challenges/certificado/
+    - name: Iniciar sesion con el registry por defecto
+      containers.podman.podman_login:
+        username: AGBcontainerRegistry1
+        password: 'LvYLvjIp6Wb1Ty9nfAXv96bsqujVpLulkYcftszn28+ACRCGd6wL'
+        registry: quay.io
